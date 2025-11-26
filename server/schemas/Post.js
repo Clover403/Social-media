@@ -56,18 +56,16 @@ export const postTypeDefs = `#graphql
     content: String!
     tags: [String]
     imgUrl: String
-    authorId: ID!
   }
 
   input CommentInput {
     content: String!
-    username: String!
   }
 
   type Mutation {
     addPost(newPost: PostInput): Post
     commentPost(postId: ID!, comment: CommentInput!): String
-    likePost(postId: ID!, username: String!): String
+    likePost(postId: ID!): String
   }
 `;
 
@@ -100,15 +98,24 @@ export const postResolvers = {
   },
   
   Mutation: {
-    addPost: async (_, args) => {
-      const { content, tags, imgUrl, authorId } = args.newPost;
+    addPost: async (_, args, contextValue) => {
+      // Require authentication
+      const currentUser = await contextValue.auth();
+      
+      const { content, tags, imgUrl } = args.newPost;
       
       // Validation
       if (!content || content.trim().length === 0) {
         throw new Error("Content is required");
       }
 
-      const post = await Post.addPost({ content, tags, imgUrl, authorId });
+      // Auto-populate authorId dari user yang login
+      const post = await Post.addPost({ 
+        content, 
+        tags, 
+        imgUrl, 
+        authorId: currentUser._id.toString() 
+      });
       
       // Invalidate cache
       console.log('Invalidating posts cache');
@@ -118,18 +125,21 @@ export const postResolvers = {
       return post;
     },
     
-    commentPost: async (_, args) => {
+    commentPost: async (_, args, contextValue) => {
+      // Require authentication
+      const currentUser = await contextValue.auth();
+      
       const { postId, comment } = args;
       
       if (!comment.content || comment.content.trim().length === 0) {
         throw new Error("Comment content is required");
       }
       
-      if (!comment.username || comment.username.trim().length === 0) {
-        throw new Error("Username is required");
-      }
-      
-      const result = await Post.addComment(postId, comment);
+      // Auto-populate username dari user yang login
+      const result = await Post.addComment(postId, {
+        content: comment.content,
+        username: currentUser.username
+      });
       
       // Invalidate cache
       console.log('Invalidating posts cache');
@@ -139,14 +149,14 @@ export const postResolvers = {
       return result;
     },
     
-    likePost: async (_, args) => {
-      const { postId, username } = args;
+    likePost: async (_, args, contextValue) => {
+      // Require authentication
+      const currentUser = await contextValue.auth();
       
-      if (!username || username.trim().length === 0) {
-        throw new Error("Username is required");
-      }
+      const { postId } = args;
       
-      const result = await Post.likePost(postId, username);
+      // Auto-populate username dari user yang login
+      const result = await Post.likePost(postId, currentUser.username);
       
       // Invalidate cache
       console.log('Invalidating posts cache');

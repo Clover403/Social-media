@@ -40,16 +40,7 @@ export const userResolvers = {
     getUserById: async (_, args) => {
       const { id } = args;
       const user = await User.getUserById(id);
-      
-      // Ambil followers dan following
-      const followers = await Follow.getFollowers(id);
-      const following = await Follow.getFollowing(id);
-      
-      return {
-        ...user,
-        followers,
-        following
-      };
+      return user;
     },
     getProfile: async function (_, __, contextValue) {
       const user = await contextValue.auth();

@@ -10,16 +10,118 @@ export default class User {
   }
 
   static async getUsers() {
-    const collection = this.getCollection();
-    const users = await collection.find().toArray();
+    const db = getDb();
+    const usersCollection = db.collection("users");
+
+    // Aggregate semua users dengan followers dan following
+    const users = await usersCollection
+      .aggregate([
+        // Lookup followers
+        {
+          $lookup: {
+            from: "follows",
+            localField: "_id",
+            foreignField: "followingId",
+            as: "followerRelations"
+          }
+        },
+        // Lookup following
+        {
+          $lookup: {
+            from: "follows",
+            localField: "_id",
+            foreignField: "followerId",
+            as: "followingRelations"
+          }
+        },
+        // Lookup user details untuk followers
+        {
+          $lookup: {
+            from: "users",
+            localField: "followerRelations.followerId",
+            foreignField: "_id",
+            as: "followers"
+          }
+        },
+        // Lookup user details untuk following
+        {
+          $lookup: {
+            from: "users",
+            localField: "followingRelations.followingId",
+            foreignField: "_id",
+            as: "following"
+          }
+        },
+        // Hapus field temporary
+        {
+          $project: {
+            followerRelations: 0,
+            followingRelations: 0
+          }
+        }
+      ])
+      .toArray();
+
     return users;
   }
 
   static async getUserById(id) {
     const _id = new ObjectId(id);
-    const collection = this.getCollection();
-    const user = await collection.findOne({ _id });
-    return user;
+    const db = getDb();
+    const usersCollection = db.collection("users");
+    const followsCollection = db.collection("follows");
+
+    // Aggregate user dengan followers dan following
+    const result = await usersCollection
+      .aggregate([
+        { $match: { _id } },
+        // Lookup followers (yang follow user ini)
+        {
+          $lookup: {
+            from: "follows",
+            localField: "_id",
+            foreignField: "followingId",
+            as: "followerRelations"
+          }
+        },
+        // Lookup following (yang di-follow user ini)
+        {
+          $lookup: {
+            from: "follows",
+            localField: "_id",
+            foreignField: "followerId",
+            as: "followingRelations"
+          }
+        },
+        // Lookup user details untuk followers
+        {
+          $lookup: {
+            from: "users",
+            localField: "followerRelations.followerId",
+            foreignField: "_id",
+            as: "followers"
+          }
+        },
+        // Lookup user details untuk following
+        {
+          $lookup: {
+            from: "users",
+            localField: "followingRelations.followingId",
+            foreignField: "_id",
+            as: "following"
+          }
+        },
+        // Hapus field temporary
+        {
+          $project: {
+            followerRelations: 0,
+            followingRelations: 0
+          }
+        }
+      ])
+      .toArray();
+
+    return result[0];
   }
 
   static async findByUsername(username) {
