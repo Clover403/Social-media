@@ -68,10 +68,20 @@ export const postTypeDefs = `#graphql
 export const postResolvers = {
   Query: {
     getPosts: async () => {
+      const startRedis = Date.now()
       const cachePosts = await redis.get("posts")
-      if(cachePosts) return JSON.parse(cachePosts)
+      const redisTime = Date.now() - startRedis
+      
+      if(cachePosts) {
+        console.log(`✅ Returning cached posts from Redis (${redisTime}ms)`)
+        return JSON.parse(cachePosts)
+      }
 
+      console.log(`⚠️ Cache MISS - Fetching from database (Redis check: ${redisTime}ms)`)
+      const startDb = Date.now()
       const posts = await Post.getPosts();
+      const dbTime = Date.now() - startDb
+      
       await redis.set("posts", JSON.stringify(posts))
       
       return posts;
@@ -106,6 +116,7 @@ export const postResolvers = {
       
       // Invalidate cache
       await redis.del("posts")
+      console.log('🗑️ Redis cache invalidated (addPost)')
       
       return post;
     },
@@ -128,6 +139,7 @@ export const postResolvers = {
       
       // Invalidate cache
       await redis.del("posts")
+      console.log('🗑️ Redis cache invalidated (commentPost)')
       
       return result;
     },
@@ -143,6 +155,7 @@ export const postResolvers = {
       
       // Invalidate cache
       await redis.del("posts")
+      console.log('🗑️ Redis cache invalidated (likePost)')
       
       return result;
     }

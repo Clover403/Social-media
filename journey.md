@@ -1,3 +1,13 @@
+// jalankan emu
+emulator -avd Medium_Phone_API_36.1
+
+// lihat list device
+adb devices
+
+//matikan device
+adb -s emulator-5554 emu kill
+
+
 # Journey
 
 ## Day 1
