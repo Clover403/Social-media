@@ -1,0 +1,87 @@
+import User from "../models/User.js";
+import Follow from "../models/Follow.js";
+
+export const userTypeDefs = `#graphql
+  type User {
+    _id: ID
+    name: String
+    username: String
+    password: String
+    followers: [User]
+    following: [User]
+  }
+
+  type Query {
+    getUsers: [User]
+    getUserById(id: ID): User
+    getProfile: User
+    searchUsers(username: String!): [User]
+  }
+  
+  input UserInput {
+    name: String
+    username: String
+    password: String
+  }
+
+  type Mutation {
+    register(newUser: UserInput): String
+    login(username: String, password: String): String
+    followUser(followingId: ID!): String
+  }
+`;
+
+export const userResolvers = {
+  Query: {
+    getUsers: async () => {
+      const users = await User.getUsers();
+      return users;
+    },
+    getUserById: async (_, args) => {
+      const { id } = args;
+      const user = await User.getUserById(id);
+      
+      // Ambil followers dan following
+      const followers = await Follow.getFollowers(id);
+      const following = await Follow.getFollowing(id);
+      
+      return {
+        ...user,
+        followers,
+        following
+      };
+    },
+    getProfile: async function (_, __, contextValue) {
+      const user = await contextValue.auth();
+      return user;
+    },
+    searchUsers: async (_, args) => {
+      const { username } = args;
+      const users = await User.searchUsers(username);
+      return users;
+    },
+  },
+  Mutation: {
+    register: async function (_, args) {
+      const { name, username, password } = args.newUser;
+      const message = await User.createUser({ name, username, password });
+      return message;
+    },
+    login: async function (_, args) {
+      const { username, password } = args;
+      const token = await User.login(username, password);
+      return token;
+    },
+    followUser: async function (_, args, contextValue) {
+      const currentUser = await contextValue.auth();
+      const { followingId } = args;
+      
+      if (currentUser._id.toString() === followingId) {
+        throw new Error("You cannot follow yourself");
+      }
+      
+      await Follow.followUser(followingId, currentUser._id.toString());
+      return "Successfully followed user";
+    },
+  },
+};
