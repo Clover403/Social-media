@@ -1,18 +1,18 @@
 # 📚 NOTES - Social Media Backend (GraphQL + MongoDB)
 
 ## 🎯 Overview
-Backend aplikasi social media menggunakan **GraphQL** (Apollo Server) dan **MongoDB** dengan fitur lengkap untuk user management, posting, comments, likes, dan follow system.
+Backend aplikasi social media menggunakan GraphQL (Apollo Server) dan MongoDB dengan fitur lengkap untuk user management, posting, comments, likes, dan follow system.
 
 ---
 
 ## 🔑 Konsep Penting untuk Pemula
 
-### 1. **GraphQL vs REST API**
-- **REST**: Multiple endpoints (`/users`, `/posts`, `/comments`)
-- **GraphQL**: Single endpoint dengan query yang fleksibel
-- Keuntungan: Client bisa request data yang **spesifik** (tidak over-fetching)
+### 1. GraphQL vs REST API
+- REST: Multiple endpoints (`/users`, `/posts`, `/comments`)
+- GraphQL: Single endpoint dengan query yang fleksibel
+- Keuntungan: Client bisa request data yang spesifik (tidak over-fetching)
 
-### 2. **MongoDB Aggregation Pipeline**
+### 2. MongoDB Aggregation Pipeline
 MongoDB aggregation adalah cara untuk memproses data dengan beberapa tahapan:
 
 ```javascript
@@ -24,7 +24,7 @@ MongoDB aggregation adalah cara untuk memproses data dengan beberapa tahapan:
 ])
 ```
 
-**Contoh Real**: Mengambil post dengan author name
+Contoh Real: Mengambil post dengan author name
 ```javascript
 // Tanpa aggregation: harus query 2x
 const post = await db.posts.findOne({ _id });
@@ -37,12 +37,12 @@ const post = await db.posts.aggregate([
 ]);
 ```
 
-### 3. **Cache dengan Invalidation**
+### 3. Cache dengan Invalidation
 Cache = menyimpan data di memory untuk performa lebih cepat
 
-**Strategi**:
-- ✅ **Cache pada READ** (getPosts): Simpan hasil query di memory
-- ❌ **Invalidate pada WRITE** (addPost, comment, like): Hapus cache agar data fresh
+Strategi:
+- ✅ Cache pada READ (getPosts): Simpan hasil query di memory
+- ❌ Invalidate pada WRITE (addPost, comment, like): Hapus cache agar data fresh
 
 ```javascript
 // Cache storage
@@ -58,10 +58,10 @@ if (postsCache && !expired) {
 postsCache = null; // Next read akan fetch fresh data
 ```
 
-### 4. **Authentication dengan JWT**
+### 4. Authentication dengan JWT
 JWT (JSON Web Token) = Token yang berisi informasi user (encrypted)
 
-**Flow**:
+Flow:
 1. User login → Server generate JWT token
 2. Client simpan token (localStorage/cookies)
 3. Setiap request → Client kirim token di header `Authorization: Bearer <token>`
@@ -81,13 +81,13 @@ const user = await User.getUserById(payload._id);
 ## 📋 Requirement Checklist
 
 ### ✅ 1. Add User (Register)
-**Query GraphQL**:
+Query GraphQL:
 ```graphql
 mutation Register($newUser: UserInput!) {
   register(newUser: $newUser)
 }
 ```
-**Variables**:
+Variables:
 ```json
 {
   "newUser": {
@@ -97,27 +97,27 @@ mutation Register($newUser: UserInput!) {
   }
 }
 ```
-**Fitur**:
+Fitur:
 - Password di-hash menggunakan `bcrypt` (10 salt rounds)
 - Return: "create sukses"
 
 ---
 
 ### ✅ 2. Login User
-**Query GraphQL**:
+Query GraphQL:
 ```graphql
 mutation Login($username: String!, $password: String!) {
   login(username: $username, password: $password)
 }
 ```
-**Variables**:
+Variables:
 ```json
 {
   "username": "johndoe",
   "password": "password123"
 }
 ```
-**Fitur**:
+Fitur:
 - Compare password dengan `bcrypt.compareSync()`
 - Generate JWT token dengan secret key
 - Return: JWT token string
@@ -125,7 +125,7 @@ mutation Login($username: String!, $password: String!) {
 ---
 
 ### ✅ 3. Search Users by Name/Username
-**Query GraphQL**:
+Query GraphQL:
 ```graphql
 query SearchUsers($username: String!) {
   searchUsers(username: $username) {
@@ -135,18 +135,18 @@ query SearchUsers($username: String!) {
   }
 }
 ```
-**Variables**:
+Variables:
 ```json
 {
   "username": "john"
 }
 ```
-**Fitur**:
-- Menggunakan **MongoDB Regex** untuk partial matching
-- **Case-insensitive** (`$options: "i"`)
-- Mencari di field `username` **DAN** `name` (menggunakan `$or`)
+Fitur:
+- Menggunakan MongoDB Regex untuk partial matching
+- Case-insensitive (`$options: "i"`)
+- Mencari di field `username` DAN `name` (menggunakan `$or`)
 
-**Penjelasan Regex**:
+Penjelasan Regex:
 ```javascript
 { username: { $regex: "john", $options: "i" } }
 // Akan match: "john", "John", "johnny", "JOHN123"
@@ -155,30 +155,30 @@ query SearchUsers($username: String!) {
 ---
 
 ### ✅ 4. Follow User
-**Query GraphQL**:
+Query GraphQL:
 ```graphql
 mutation FollowUser($followingId: ID!) {
   followUser(followingId: $followingId)
 }
 ```
-**Headers** (perlu login dulu):
+Headers (perlu login dulu):
 ```json
 {
   "Authorization": "Bearer <your_jwt_token>"
 }
 ```
-**Variables**:
+Variables:
 ```json
 {
   "followingId": "674e5a1234567890abcdef12"
 }
 ```
-**Fitur**:
-- Memerlukan **authentication** (harus login)
+Fitur:
+- Memerlukan authentication (harus login)
 - Simpan relasi di collection `follows`
 - Validasi: tidak bisa follow diri sendiri
 
-**Struktur Data Follow**:
+Struktur Data Follow:
 ```javascript
 {
   followingId: ObjectId("674e..."), // User yang di-follow
@@ -191,7 +191,7 @@ mutation FollowUser($followingId: ID!) {
 ---
 
 ### ✅ 5. Get User by Id (dengan Followers & Following)
-**Query GraphQL**:
+Query GraphQL:
 ```graphql
 query GetUser($id: ID!) {
   getUserById(id: $id) {
@@ -211,18 +211,18 @@ query GetUser($id: ID!) {
   }
 }
 ```
-**Variables**:
+Variables:
 ```json
 {
   "id": "674e5a1234567890abcdef12"
 }
 ```
-**Fitur**:
-- Menampilkan **list followers** (siapa saja yang follow user ini)
-- Menampilkan **list following** (siapa saja yang di-follow oleh user ini)
-- Menggunakan **MongoDB Aggregation** dengan `$lookup` dan `$replaceRoot`
+Fitur:
+- Menampilkan list followers (siapa saja yang follow user ini)
+- Menampilkan list following (siapa saja yang di-follow oleh user ini)
+- Menggunakan MongoDB Aggregation dengan `$lookup` dan `$replaceRoot`
 
-**Penjelasan Aggregation**:
+Penjelasan Aggregation:
 ```javascript
 // Get Followers
 { $match: { followingId: userId } }  // Cari semua yang followingId = userId
@@ -238,7 +238,7 @@ query GetUser($id: ID!) {
 ---
 
 ### ✅ 6. Add Post
-**Query GraphQL**:
+Query GraphQL:
 ```graphql
 mutation AddPost($newPost: PostInput!) {
   addPost(newPost: $newPost) {
@@ -251,7 +251,7 @@ mutation AddPost($newPost: PostInput!) {
   }
 }
 ```
-**Variables**:
+Variables:
 ```json
 {
   "newPost": {
@@ -262,17 +262,17 @@ mutation AddPost($newPost: PostInput!) {
   }
 }
 ```
-**Fitur**:
+Fitur:
 - Validasi: `content` tidak boleh kosong
 - Validasi: `authorId` harus valid ObjectId (24 hex characters)
 - Auto-add `createdAt` dan `updatedAt`
-- **Invalidate cache** posts setelah add
+- Invalidate cache posts setelah add
 - Return: Post object dengan author details (via aggregation)
 
 ---
 
 ### ✅ 7. Get Posts (dengan Cache)
-**Query GraphQL**:
+Query GraphQL:
 ```graphql
 query GetPosts {
   getPosts {
@@ -296,13 +296,13 @@ query GetPosts {
   }
 }
 ```
-**Fitur**:
-- Menampilkan **author name/username** via `$lookup`
-- Sort by **createdAt descending** (post terbaru di atas)
-- **Cache di memory** selama 5 menit
+Fitur:
+- Menampilkan author name/username via `$lookup`
+- Sort by createdAt descending (post terbaru di atas)
+- Cache di memory selama 5 menit
 - Console log: "Returning cached posts" atau "Fetching fresh posts from database"
 
-**Cara Kerja Cache**:
+Cara Kerja Cache:
 ```javascript
 const CACHE_DURATION = 5 * 60 * 1000; // 5 menit
 
@@ -320,7 +320,7 @@ cacheTimestamp = now;
 ---
 
 ### ✅ 8. Get Post by Id (dengan Lookup Comments & Likes)
-**Query GraphQL**:
+Query GraphQL:
 ```graphql
 query GetPost($id: ID!) {
   getPostById(id: $id) {
@@ -351,19 +351,19 @@ query GetPost($id: ID!) {
   }
 }
 ```
-**Variables**:
+Variables:
 ```json
 {
   "id": "674e5a1234567890abcdef12"
 }
 ```
-**Fitur**:
-- Menampilkan **author details**
-- Menampilkan **user details di comments** (nama/username yang comment)
-- Menampilkan **user details di likes** (nama/username yang like)
-- Menggunakan **Advanced Aggregation** dengan `$map`, `$filter`, `$arrayElemAt`
+Fitur:
+- Menampilkan author details
+- Menampilkan user details di comments (nama/username yang comment)
+- Menampilkan user details di likes (nama/username yang like)
+- Menggunakan Advanced Aggregation dengan `$map`, `$filter`, `$arrayElemAt`
 
-**Penjelasan Aggregation Kompleks**:
+Penjelasan Aggregation Kompleks:
 ```javascript
 // 1. Lookup semua users yang mungkin comment/like
 { $lookup: { from: "users", localField: "comments.username", as: "commentUsers" } }
@@ -402,13 +402,13 @@ query GetPost($id: ID!) {
 ---
 
 ### ✅ 9. Comment Post
-**Query GraphQL**:
+Query GraphQL:
 ```graphql
 mutation CommentPost($postId: ID!, $comment: CommentInput!) {
   commentPost(postId: $postId, comment: $comment)
 }
 ```
-**Variables**:
+Variables:
 ```json
 {
   "postId": "674e5a1234567890abcdef12",
@@ -418,15 +418,15 @@ mutation CommentPost($postId: ID!, $comment: CommentInput!) {
   }
 }
 ```
-**Fitur**:
+Fitur:
 - Validasi: `content` tidak boleh kosong
 - Validasi: `username` tidak boleh kosong
-- Menggunakan **MongoDB $push** untuk append ke array `comments`
+- Menggunakan MongoDB $push untuk append ke array `comments`
 - Auto-add `createdAt` dan `updatedAt` di comment
-- **Invalidate cache** posts
+- Invalidate cache posts
 - Return: "Comment added successfully"
 
-**MongoDB Update Operation**:
+MongoDB Update Operation:
 ```javascript
 await collection.updateOne(
   { _id: postId },
@@ -440,27 +440,27 @@ await collection.updateOne(
 ---
 
 ### ✅ 10. Like Post
-**Query GraphQL**:
+Query GraphQL:
 ```graphql
 mutation LikePost($postId: ID!, $username: String!) {
   likePost(postId: $postId, username: $username)
 }
 ```
-**Variables**:
+Variables:
 ```json
 {
   "postId": "674e5a1234567890abcdef12",
   "username": "johndoe"
 }
 ```
-**Fitur**:
+Fitur:
 - Validasi: `username` tidak boleh kosong
-- Menggunakan **MongoDB $push** untuk append ke array `likes`
+- Menggunakan MongoDB $push untuk append ke array `likes`
 - Auto-add `createdAt` dan `updatedAt` di like
-- **Invalidate cache** posts
+- Invalidate cache posts
 - Return: "Post liked successfully"
 
-**Note**: Tidak ada validasi duplicate like (user bisa like berkali-kali). Untuk prevent duplicate, bisa tambahkan:
+Note: Tidak ada validasi duplicate like (user bisa like berkali-kali). Untuk prevent duplicate, bisa tambahkan:
 ```javascript
 // Check if user already liked
 const post = await collection.findOne({ 
@@ -606,11 +606,11 @@ curl -X POST http://localhost:3000/ \
 
 ## 🔗 Resources
 
-- **GraphQL Docs**: https://graphql.org/learn/
-- **Apollo Server**: https://www.apollographql.com/docs/apollo-server/
-- **MongoDB Aggregation**: https://www.mongodb.com/docs/manual/aggregation/
-- **JWT**: https://jwt.io/introduction
-- **Bcrypt**: https://www.npmjs.com/package/bcryptjs
+- GraphQL Docs: https://graphql.org/learn/
+- Apollo Server: https://www.apollographql.com/docs/apollo-server/
+- MongoDB Aggregation: https://www.mongodb.com/docs/manual/aggregation/
+- JWT: https://jwt.io/introduction
+- Bcrypt: https://www.npmjs.com/package/bcryptjs
 
 ---
 
@@ -631,4 +631,4 @@ curl -X POST http://localhost:3000/ \
 
 ---
 
-**Happy Coding! 🚀**
+Happy Coding! 🚀

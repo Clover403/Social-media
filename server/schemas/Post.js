@@ -1,9 +1,5 @@
+import { redis } from '../config/redis.js';
 import Post from '../models/Post.js';
-
-// Simple in-memory cache
-let postsCache = null;
-let cacheTimestamp = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const postTypeDefs = `#graphql
   type UserDetail {
@@ -72,20 +68,11 @@ export const postTypeDefs = `#graphql
 export const postResolvers = {
   Query: {
     getPosts: async () => {
-      // Check if cache is valid
-      const now = Date.now();
-      if (postsCache && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION) {
-        console.log('Returning cached posts');
-        return postsCache;
-      }
+      const cachePosts = await redis.get("posts")
+      if(cachePosts) return JSON.parse(cachePosts)
 
-      // Fetch fresh data
-      console.log('Fetching fresh posts from database');
       const posts = await Post.getPosts();
-      
-      // Update cache
-      postsCache = posts;
-      cacheTimestamp = now;
+      await redis.set("posts", JSON.stringify(posts))
       
       return posts;
     },
@@ -118,9 +105,7 @@ export const postResolvers = {
       });
       
       // Invalidate cache
-      console.log('Invalidating posts cache');
-      postsCache = null;
-      cacheTimestamp = null;
+      await redis.del("posts")
       
       return post;
     },
@@ -142,9 +127,7 @@ export const postResolvers = {
       });
       
       // Invalidate cache
-      console.log('Invalidating posts cache');
-      postsCache = null;
-      cacheTimestamp = null;
+      await redis.del("posts")
       
       return result;
     },
@@ -159,18 +142,9 @@ export const postResolvers = {
       const result = await Post.likePost(postId, currentUser.username);
       
       // Invalidate cache
-      console.log('Invalidating posts cache');
-      postsCache = null;
-      cacheTimestamp = null;
+      await redis.del("posts")
       
       return result;
     }
   }
-};
-
-// Helper function to manually clear cache (if needed)
-export const clearPostsCache = () => {
-  postsCache = null;
-  cacheTimestamp = null;
-  console.log('Posts cache cleared manually');
 };

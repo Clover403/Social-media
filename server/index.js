@@ -2,7 +2,7 @@ import "dotenv/config";
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { userResolvers, userTypeDefs } from "./schemas/user.js";
-import { postResolvers, postTypeDefs } from "./schemas/post.js";
+import { postResolvers, postTypeDefs } from "./schemas/Post.js";
 import { auth } from "./middlewares/auth.js";
 import { initializeDb } from "./config/mongodb.js";
 

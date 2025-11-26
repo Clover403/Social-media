@@ -130,14 +130,6 @@ export default class User {
     return user;
   }
 
-  static async findByUsernameOrEmail(username, email) {
-    const collection = this.getCollection();
-    const user = await collection.findOne({
-      $or: [{ username }, { email }],
-    });
-    return user;
-  }
-
   static async searchUsers(keyword) {
     const collection = this.getCollection();
     const users = await collection
