@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_POSTS } from '../queries/queries';
@@ -64,14 +65,19 @@ export default function HomeScreen({ navigation }) {
       )}
 
       {item.imgUrl && (
-        <View style={styles.imageContainer}>
-          <Text style={styles.imageText}>🖼️ Image attached</Text>
-        </View>
+        <Image 
+          source={{ uri: item.imgUrl }} 
+          style={styles.postImage}
+          resizeMode="cover"
+        />
       )}
 
       <View style={styles.postActions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionIcon}>💬</Text>
+        <TouchableOpacity 
+          style={styles.actionButton}
+          onPress={() => navigation.navigate('PostDetail', { postId: item._id })}
+        >
+          <Text style={styles.commentIcon}>💬</Text>
           <Text style={styles.actionText}>{item.comments?.length || 0}</Text>
         </TouchableOpacity>
 
@@ -79,14 +85,13 @@ export default function HomeScreen({ navigation }) {
           style={styles.actionButton}
           onPress={() => handleLike(item._id)}
         >
-          <Text style={styles.actionIcon}>
-            {item.likes?.some(like => like.username) ? '❤️' : '🤍'}
+          <Text style={[
+            styles.likeIcon, 
+            item.likes?.some(like => like.username) && styles.likedIcon
+          ]}>
+            {item.likes?.some(like => like.username) ? '★' : '☆'}
           </Text>
           <Text style={styles.actionText}>{item.likes?.length || 0}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionIcon}>🔄</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -123,6 +128,13 @@ export default function HomeScreen({ navigation }) {
         }
         contentContainerStyle={styles.listContainer}
       />
+      
+      <TouchableOpacity 
+        style={styles.floatingButton}
+        onPress={() => navigation.navigate('Create')}
+      >
+        <Text style={styles.floatingButtonText}>✎</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -200,15 +212,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
     fontSize: 14,
   },
-  imageContainer: {
-    backgroundColor: '#393f4f',
-    padding: 20,
-    borderRadius: 4,
-    alignItems: 'center',
+  postImage: {
+    width: '100%',
+    height: 250,
+    borderRadius: 8,
     marginBottom: 10,
-  },
-  imageText: {
-    color: '#9baec8',
+    backgroundColor: '#393f4f',
   },
   postActions: {
     flexDirection: 'row',
@@ -222,12 +231,49 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   actionIcon: {
-    fontSize: 18,
+    fontSize: 20,
     marginRight: 5,
+    color: '#9baec8',
+  },
+  commentIcon: {
+    fontSize: 20,
+    marginRight: 5,
+    color: '#fff',
+  },
+  likeIcon: {
+    fontSize: 22,
+    marginRight: 5,
+    color: '#9baec8',
+  },
+  likedIcon: {
+    color: '#fff',
+  },
+  liked: {
+    color: '#ff4757',
   },
   actionText: {
     color: '#9baec8',
     fontSize: 14,
+  },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+    backgroundColor: '#393f4f',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  floatingButtonText: {
+    fontSize: 28,
+    color: '#fff',
   },
   errorText: {
     color: '#ff5050',

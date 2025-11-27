@@ -13,7 +13,6 @@ export default class User {
     const db = getDb();
     const usersCollection = db.collection("users");
 
-    // Aggregate semua users dengan followers dan following
     const users = await usersCollection
       .aggregate([
         // Lookup followers
@@ -69,9 +68,7 @@ export default class User {
     const _id = new ObjectId(id);
     const db = getDb();
     const usersCollection = db.collection("users");
-    const followsCollection = db.collection("follows");
 
-    // Aggregate user dengan followers dan following
     const result = await usersCollection
       .aggregate([
         { $match: { _id } },

@@ -6,6 +6,9 @@ import client from './src/config/apollo';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import MainNavigator from './src/navigators/MainNavigator';
+import PostDetailScreen from './src/screens/PostDetailScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import CreatePostScreen from './src/screens/CreatePostScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -28,6 +31,33 @@ export default function App() {
             name="MainNavigator"
             component={MainNavigator}
             options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Create"
+            component={CreatePostScreen}
+            options={{
+              title: 'Create Post',
+              headerStyle: { backgroundColor: '#282c37' },
+              headerTintColor: '#fff',
+            }}
+          />
+          <Stack.Screen
+            name="PostDetail"
+            component={PostDetailScreen}
+            options={{
+              title: 'Post',
+              headerStyle: { backgroundColor: '#282c37' },
+              headerTintColor: '#fff',
+            }}
+          />
+          <Stack.Screen
+            name="Profile"
+            component={ProfileScreen}
+            options={{
+              title: 'Profile',
+              headerStyle: { backgroundColor: '#282c37' },
+              headerTintColor: '#fff',
+            }}
           />
         </Stack.Navigator>
       </NavigationContainer>

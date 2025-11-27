@@ -3,7 +3,7 @@ import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
 import SearchScreen from '../screens/SearchScreen';
-import CreatePostScreen from '../screens/CreatePostScreen';
+import MyProfileScreen from '../screens/MyProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,7 +27,7 @@ export default function MainNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>🏠</Text>,
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>⌂</Text>,
           title: 'Home',
         }}
       />
@@ -35,16 +35,16 @@ export default function MainNavigator() {
         name="Search"
         component={SearchScreen}
         options={{
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>🔍</Text>,
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>⚲</Text>,
           title: 'Search',
         }}
       />
       <Tab.Screen
-        name="Create"
-        component={CreatePostScreen}
+        name="Profile"
+        component={MyProfileScreen}
         options={{
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>➕</Text>,
-          title: 'Create Post',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>👤</Text>,
+          title: 'Profile',
         }}
       />
     </Tab.Navigator>

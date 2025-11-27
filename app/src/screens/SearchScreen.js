@@ -78,7 +78,6 @@ export default function SearchScreen({ navigation }) {
 
       {!loading && !data && (
         <View style={styles.centerContainer}>
-          <Text style={styles.placeholderText}>🔍</Text>
           <Text style={styles.placeholderSubtext}>
             Search for users by username
           </Text>

@@ -24,6 +24,9 @@ export default function CreatePostScreen({ navigation }) {
     refetchQueries: [{ query: GET_POSTS }],
     onCompleted: () => {
       Alert.alert('Success', 'Post created successfully!');
+      setContent('');
+      setTags('');
+      setImgUrl('');
       navigation.goBack();
     },
     onError: (error) => {

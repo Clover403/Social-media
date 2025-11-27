@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_POST_BY_ID } from '../queries/queries';
@@ -115,16 +116,21 @@ export default function PostDetailScreen({ route, navigation }) {
 
         {/* Image */}
         {post.imgUrl && (
-          <View style={styles.imageContainer}>
-            <Text style={styles.imageText}>🖼️ {post.imgUrl}</Text>
-          </View>
+          <Image 
+            source={{ uri: post.imgUrl }} 
+            style={styles.postImage}
+            resizeMode="cover"
+          />
         )}
 
         {/* Actions */}
         <View style={styles.actionsBar}>
           <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
-            <Text style={styles.actionIcon}>
-              {post.likes?.length > 0 ? '❤️' : '🤍'}
+            <Text style={[
+              styles.actionIcon,
+              post.likes?.length > 0 && styles.likedIcon
+            ]}>
+              {post.likes?.length > 0 ? '★' : '☆'}
             </Text>
             <Text style={styles.actionText}>
               {post.likes?.length || 0} likes
@@ -266,16 +272,11 @@ const styles = StyleSheet.create({
     marginRight: 8,
     fontSize: 14,
   },
-  imageContainer: {
-    backgroundColor: '#282c37',
-    padding: 15,
-    marginHorizontal: 15,
-    borderRadius: 8,
+  postImage: {
+    width: '100%',
+    height: 300,
     marginBottom: 10,
-  },
-  imageText: {
-    color: '#9baec8',
-    fontSize: 14,
+    backgroundColor: '#393f4f',
   },
   actionsBar: {
     flexDirection: 'row',
@@ -295,6 +296,13 @@ const styles = StyleSheet.create({
   actionIcon: {
     fontSize: 20,
     marginRight: 8,
+    color: '#9baec8',
+  },
+  likedIcon: {
+    color: '#fff',
+  },
+  liked: {
+    color: '#ff4757',
   },
   actionText: {
     color: '#9baec8',

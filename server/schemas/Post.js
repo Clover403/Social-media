@@ -73,14 +73,11 @@ export const postResolvers = {
       const redisTime = Date.now() - startRedis
       
       if(cachePosts) {
-        console.log(`✅ Returning cached posts from Redis (${redisTime}ms)`)
+        console.log(` Returning cached posts from Redis (${redisTime}ms)`)
         return JSON.parse(cachePosts)
       }
 
-      console.log(`⚠️ Cache MISS - Fetching from database (Redis check: ${redisTime}ms)`)
-      const startDb = Date.now()
       const posts = await Post.getPosts();
-      const dbTime = Date.now() - startDb
       
       await redis.set("posts", JSON.stringify(posts))
       
@@ -116,7 +113,7 @@ export const postResolvers = {
       
       // Invalidate cache
       await redis.del("posts")
-      console.log('🗑️ Redis cache invalidated (addPost)')
+      console.log(' Redis cache invalidated (addPost)')
       
       return post;
     },
@@ -139,7 +136,7 @@ export const postResolvers = {
       
       // Invalidate cache
       await redis.del("posts")
-      console.log('🗑️ Redis cache invalidated (commentPost)')
+      console.log(' Redis cache invalidated (commentPost)')
       
       return result;
     },
@@ -155,7 +152,7 @@ export const postResolvers = {
       
       // Invalidate cache
       await redis.del("posts")
-      console.log('🗑️ Redis cache invalidated (likePost)')
+      console.log(' Redis cache invalidated (likePost)')
       
       return result;
     }
