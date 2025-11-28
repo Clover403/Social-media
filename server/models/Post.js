@@ -178,20 +178,36 @@ export default class Post {
     const _id = new ObjectId(postId);
     const collection = this.getCollection();
     
-    const like = {
-      username,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    await collection.updateOne(
-      { _id },
-      { 
-        $push: { likes: like },
-        $set: { updatedAt: new Date() }
-      }
-    );
+    // Check if user already liked the post
+    const post = await collection.findOne({ _id });
+    const hasLiked = post.likes?.some(like => like.username === username);
     
-    return "Post liked successfully";
+    if (hasLiked) {
+      // Unlike: remove the like
+      await collection.updateOne(
+        { _id },
+        { 
+          $pull: { likes: { username } },
+          $set: { updatedAt: new Date() }
+        }
+      );
+      return "Post unliked successfully";
+    } else {
+      // Like: add the like
+      const like = {
+        username,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      await collection.updateOne(
+        { _id },
+        { 
+          $push: { likes: like },
+          $set: { updatedAt: new Date() }
+        }
+      );
+      return "Post liked successfully";
+    }
   }
 }

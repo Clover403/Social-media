@@ -6,11 +6,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
+  Image,
 } from 'react-native';
 import { useQuery, useMutation } from '@apollo/client';
-import { GET_USER_BY_ID } from '../queries/queries';
+import { GET_USER_BY_ID, GET_POSTS } from '../queries/queries';
 import { FOLLOW_USER } from '../queries/mutations';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen({ route, navigation }) {
   const { userId } = route.params;
@@ -19,13 +20,14 @@ export default function ProfileScreen({ route, navigation }) {
     variables: { id: userId },
   });
 
+  const { data: postsData, loading: postsLoading } = useQuery(GET_POSTS);
+
   const [followUser, { loading: followLoading }] = useMutation(FOLLOW_USER, {
     onCompleted: () => {
-      Alert.alert('Success', 'User followed!');
       refetch();
     },
     onError: (error) => {
-      Alert.alert('Error', error.message);
+      console.log('Follow error:', error.message);
     },
   });
 
@@ -50,97 +52,89 @@ export default function ProfileScreen({ route, navigation }) {
   }
 
   const user = data?.getUserById;
+  const userPosts = postsData?.getPosts?.filter(post => post.author?._id === userId) || [];
 
   return (
     <ScrollView style={styles.container}>
       {/* Profile Header */}
       <View style={styles.header}>
-        <View style={styles.coverPhoto}>
+        {user?.profilePicture ? (
+          <Image source={{ uri: user.profilePicture }} style={styles.avatarLarge} />
+        ) : (
           <View style={styles.avatarLarge}>
             <Text style={styles.avatarLargeText}>
               {user?.name?.charAt(0).toUpperCase() || '?'}
             </Text>
           </View>
-        </View>
+        )}
+        <Text style={styles.name}>{user?.name || 'Unknown'}</Text>
+        <Text style={styles.username}>@{user?.username || 'unknown'}</Text>
 
-        <View style={styles.profileInfo}>
-          <Text style={styles.name}>{user?.name || 'Unknown'}</Text>
-          <Text style={styles.username}>@{user?.username || 'unknown'}</Text>
-
-          <TouchableOpacity
-            style={[styles.followButton, followLoading && styles.followButtonDisabled]}
-            onPress={handleFollow}
-            disabled={followLoading}
-          >
-            {followLoading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.followButtonText}>Follow</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={[styles.followButton, followLoading && styles.followButtonDisabled]}
+          onPress={handleFollow}
+          disabled={followLoading}
+        >
+          {followLoading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.followButtonText}>Follow</Text>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* Stats */}
-      <View style={styles.stats}>
-        <View style={styles.statItem}>
+      <View style={styles.statsContainer}>
+        <View style={styles.statBox}>
           <Text style={styles.statNumber}>{user?.followers?.length || 0}</Text>
           <Text style={styles.statLabel}>Followers</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
+        <View style={styles.statBox}>
           <Text style={styles.statNumber}>{user?.following?.length || 0}</Text>
           <Text style={styles.statLabel}>Following</Text>
         </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statNumber}>{userPosts.length}</Text>
+          <Text style={styles.statLabel}>Posts</Text>
+        </View>
       </View>
 
-      {/* Followers List */}
-      {user?.followers && user.followers.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Followers</Text>
-          {user.followers.map((follower) => (
+      {/* User Posts */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Posts</Text>
+        {postsLoading ? (
+          <ActivityIndicator size="small" color="#6364ff" style={{ marginVertical: 20 }} />
+        ) : userPosts.length > 0 ? (
+          userPosts.map((post) => (
             <TouchableOpacity
-              key={follower._id}
-              style={styles.userCard}
-              onPress={() => navigation.push('ProfileScreen', { userId: follower._id })}
+              key={post._id}
+              style={styles.postCard}
+              onPress={() => navigation.navigate('PostDetail', { postId: post._id })}
             >
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {follower.name?.charAt(0).toUpperCase() || '?'}
-                </Text>
-              </View>
-              <View style={styles.userInfo}>
-                <Text style={styles.userName}>{follower.name}</Text>
-                <Text style={styles.userUsername}>@{follower.username}</Text>
+              <Text style={styles.postContent} numberOfLines={3}>
+                {post.content}
+              </Text>
+              {post.imgUrl && (
+                <Image source={{ uri: post.imgUrl }} style={styles.postThumbnail} />
+              )}
+              <View style={styles.postStats}>
+                <View style={styles.postStat}>
+                  <Ionicons name="chatbubble-outline" size={14} color="#9baec8" />
+                  <Text style={styles.postStatText}>{post.comments?.length || 0}</Text>
+                </View>
+                <View style={styles.postStat}>
+                  <Ionicons name="star-outline" size={14} color="#9baec8" />
+                  <Text style={styles.postStatText}>{post.likes?.length || 0}</Text>
+                </View>
               </View>
             </TouchableOpacity>
-          ))}
-        </View>
-      )}
+          ))
+        ) : (
+          <Text style={styles.emptyText}>No posts yet</Text>
+        )}
+      </View>
 
-      {/* Following List */}
-      {user?.following && user.following.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Following</Text>
-          {user.following.map((following) => (
-            <TouchableOpacity
-              key={following._id}
-              style={styles.userCard}
-              onPress={() => navigation.push('ProfileScreen', { userId: following._id })}
-            >
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {following.name?.charAt(0).toUpperCase() || '?'}
-                </Text>
-              </View>
-              <View style={styles.userInfo}>
-                <Text style={styles.userName}>{following.name}</Text>
-                <Text style={styles.userUsername}>@{following.username}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+      <View style={styles.bottomSpace} />
     </ScrollView>
   );
 }
@@ -157,13 +151,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#191b22',
   },
   header: {
-    backgroundColor: '#282c37',
-  },
-  coverPhoto: {
-    height: 150,
-    backgroundColor: '#393f4f',
-    justifyContent: 'flex-end',
     alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#282c37',
   },
   avatarLarge: {
     width: 100,
@@ -172,9 +162,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#6364ff',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
-    borderColor: '#282c37',
-    marginBottom: -50,
+    marginBottom: 15,
   },
   avatarLargeText: {
     color: '#fff',
@@ -286,5 +274,53 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#ff5050',
     fontSize: 16,
+  },
+  postCard: {
+    backgroundColor: '#393f4f',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  postContent: {
+    color: '#fff',
+    fontSize: 14,
+    marginBottom: 10,
+  },
+  postThumbnail: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  postStats: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  postStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  postStatText: {
+    color: '#9baec8',
+    fontSize: 12,
+  },
+  emptyText: {
+    color: '#9baec8',
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
+  bottomSpace: {
+    height: 30,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#282c37',
+    marginTop: 1,
+    paddingVertical: 20,
+  },
+  statBox: {
+    flex: 1,
+    alignItems: 'center',
   },
 });

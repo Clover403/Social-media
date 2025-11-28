@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,10 +15,29 @@ import {
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_POST_BY_ID } from '../queries/queries';
 import { COMMENT_POST, LIKE_POST } from '../queries/mutations';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { jwtDecode } from 'jwt-decode';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function PostDetailScreen({ route, navigation }) {
   const { postId } = route.params;
   const [commentText, setCommentText] = useState('');
+  const [currentUsername, setCurrentUsername] = useState(null);
+
+  useEffect(() => {
+    const getUsername = async () => {
+      try {
+        const token = await AsyncStorage.getItem('access_token');
+        if (token) {
+          const decoded = jwtDecode(token);
+          setCurrentUsername(decoded.username);
+        }
+      } catch (error) {
+        console.error('Error getting username:', error);
+      }
+    };
+    getUsername();
+  }, []);
 
   const { loading, error, data, refetch } = useQuery(GET_POST_BY_ID, {
     variables: { id: postId },
@@ -28,21 +47,19 @@ export default function PostDetailScreen({ route, navigation }) {
     onCompleted: () => {
       setCommentText('');
       refetch();
-      Alert.alert('Success', 'Comment added!');
     },
     onError: (error) => {
-      Alert.alert('Error', error.message);
+      console.log('Comment error:', error.message);
     },
   });
 
   const [likePost] = useMutation(LIKE_POST, {
     onCompleted: () => refetch(),
-    onError: (error) => Alert.alert('Error', error.message),
+    onError: (error) => console.log('Like error:', error.message),
   });
 
   const handleComment = () => {
     if (!commentText.trim()) {
-      Alert.alert('Error', 'Comment cannot be empty');
       return;
     }
     commentPost({
@@ -88,11 +105,15 @@ export default function PostDetailScreen({ route, navigation }) {
       <ScrollView style={styles.scrollView}>
         {/* Post Header */}
         <View style={styles.postHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {post.author?.name?.charAt(0).toUpperCase() || '?'}
-            </Text>
-          </View>
+          {post.author?.profilePicture ? (
+            <Image source={{ uri: post.author.profilePicture }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {post.author?.name?.charAt(0).toUpperCase() || '?'}
+              </Text>
+            </View>
+          )}
           <View style={styles.headerInfo}>
             <Text style={styles.authorName}>{post.author?.name || 'Unknown'}</Text>
             <Text style={styles.username}>@{post.author?.username || 'unknown'}</Text>
@@ -126,19 +147,18 @@ export default function PostDetailScreen({ route, navigation }) {
         {/* Actions */}
         <View style={styles.actionsBar}>
           <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
-            <Text style={[
-              styles.actionIcon,
-              post.likes?.length > 0 && styles.likedIcon
-            ]}>
-              {post.likes?.length > 0 ? '★' : '☆'}
-            </Text>
+            <Ionicons 
+              name={post.likes?.some(like => like.username === currentUsername) ? "star" : "star-outline"}
+              size={20} 
+              color={post.likes?.some(like => like.username === currentUsername) ? "#fff" : "#9baec8"}
+            />
             <Text style={styles.actionText}>
               {post.likes?.length || 0} likes
             </Text>
           </TouchableOpacity>
 
           <View style={styles.actionButton}>
-            <Text style={styles.actionIcon}>💬</Text>
+            <Ionicons name="chatbubble-outline" size={20} color="#9baec8" />
             <Text style={styles.actionText}>
               {post.comments?.length || 0} comments
             </Text>

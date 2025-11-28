@@ -21,18 +21,15 @@ export default function RegisterScreen({ navigation }) {
   
   const [register, { loading }] = useMutation(REGISTER, {
     onCompleted: () => {
-      Alert.alert('Success', 'Registration successful! Please login.', [
-        { text: 'OK', onPress: () => navigation.navigate('LoginScreen') }
-      ]);
+      navigation.navigate('LoginScreen');
     },
     onError: (error) => {
-      Alert.alert('Error', error.message);
+      console.log('Register error:', error.message);
     },
   });
 
   const handleRegister = () => {
     if (!name || !username || !password) {
-      Alert.alert('Error', 'Please fill all fields');
       return;
     }
     register({

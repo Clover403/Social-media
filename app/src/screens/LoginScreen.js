@@ -21,17 +21,15 @@ export default function LoginScreen({ navigation }) {
   const [login, { loading }] = useMutation(LOGIN, {
     onCompleted: async (data) => {
       await AsyncStorage.setItem('access_token', data.login);
-      Alert.alert('Success', 'Login successful!');
       navigation.replace('MainNavigator');
     },
     onError: (error) => {
-      Alert.alert('Error', error.message);
+      console.log('Login error:', error.message);
     },
   });
 
   const handleLogin = () => {
     if (!username || !password) {
-      Alert.alert('Error', 'Please fill all fields');
       return;
     }
     login({ variables: { username, password } });

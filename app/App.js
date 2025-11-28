@@ -51,7 +51,7 @@ export default function App() {
             }}
           />
           <Stack.Screen
-            name="Profile"
+            name="UserProfile"
             component={ProfileScreen}
             options={{
               title: 'Profile',

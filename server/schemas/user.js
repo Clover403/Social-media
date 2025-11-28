@@ -7,6 +7,7 @@ export const userTypeDefs = `#graphql
     name: String
     username: String
     password: String
+    profilePicture: String
     followers: [User]
     following: [User]
   }
@@ -28,6 +29,7 @@ export const userTypeDefs = `#graphql
     register(newUser: UserInput): String
     login(username: String, password: String): String
     followUser(followingId: ID!): String
+    updateProfile(name: String, profilePicture: String): User
   }
 `;
 
@@ -73,6 +75,16 @@ export const userResolvers = {
       
       await Follow.followUser(followingId, currentUser._id.toString());
       return "Successfully followed user";
+    },
+    updateProfile: async function (_, args, contextValue) {
+      const currentUser = await contextValue.auth();
+      const { name, profilePicture } = args;
+      
+      const updatedUser = await User.updateProfile(
+        currentUser._id.toString(),
+        { name, profilePicture }
+      );
+      return updatedUser;
     },
   },
 };

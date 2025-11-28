@@ -6,6 +6,7 @@ export const postTypeDefs = `#graphql
     _id: ID
     name: String
     username: String
+    profilePicture: String
   }
 
   type Comment {
@@ -28,6 +29,7 @@ export const postTypeDefs = `#graphql
     name: String
     username: String
     email: String
+    profilePicture: String
   }
 
   type Post {

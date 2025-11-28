@@ -41,3 +41,14 @@ export const FOLLOW_USER = gql`
     followUser(followingId: $followingId)
   }
 `;
+
+export const UPDATE_PROFILE = gql`
+  mutation UpdateProfile($name: String, $profilePicture: String) {
+    updateProfile(name: $name, profilePicture: $profilePicture) {
+      _id
+      name
+      username
+      profilePicture
+    }
+  }
+`;

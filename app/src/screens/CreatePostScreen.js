@@ -23,20 +23,18 @@ export default function CreatePostScreen({ navigation }) {
   const [addPost, { loading }] = useMutation(ADD_POST, {
     refetchQueries: [{ query: GET_POSTS }],
     onCompleted: () => {
-      Alert.alert('Success', 'Post created successfully!');
       setContent('');
       setTags('');
       setImgUrl('');
       navigation.goBack();
     },
     onError: (error) => {
-      Alert.alert('Error', error.message);
+      console.log('Create post error:', error.message);
     },
   });
 
   const handleSubmit = () => {
     if (!content.trim()) {
-      Alert.alert('Error', 'Content is required');
       return;
     }
 

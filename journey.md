@@ -1,11 +1,15 @@
+// cara lihat emulator yang ada
+emulator -list-avds
+
 // jalankan emu
 emulator -avd Medium_Phone_API_36.1
 
 // lihat list device
 adb devices
 
-//matikan device
+// matikan device
 adb -s emulator-5554 emu kill
+
 
 
 # Journey

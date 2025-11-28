@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,12 +12,31 @@ import {
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_POSTS } from '../queries/queries';
 import { LIKE_POST } from '../queries/mutations';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { jwtDecode } from 'jwt-decode';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen({ navigation }) {
+  const [currentUsername, setCurrentUsername] = useState(null);
   const { loading, error, data, refetch } = useQuery(GET_POSTS);
   const [likePost] = useMutation(LIKE_POST, {
     refetchQueries: [{ query: GET_POSTS }],
   });
+
+  useEffect(() => {
+    const getUsername = async () => {
+      try {
+        const token = await AsyncStorage.getItem('access_token');
+        if (token) {
+          const decoded = jwtDecode(token);
+          setCurrentUsername(decoded.username);
+        }
+      } catch (error) {
+        console.error('Error getting username:', error);
+      }
+    };
+    getUsername();
+  }, []);
 
   const handleLike = (postId) => {
     likePost({ variables: { postId } });
@@ -40,15 +59,24 @@ export default function HomeScreen({ navigation }) {
       onPress={() => navigation.navigate('PostDetailScreen', { postId: item._id })}
     >
       <View style={styles.postHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {item.author?.name?.charAt(0).toUpperCase() || '?'}
-          </Text>
-        </View>
-        <View style={styles.headerInfo}>
-          <Text style={styles.authorName}>{item.author?.name || 'Unknown'}</Text>
-          <Text style={styles.username}>@{item.author?.username || 'unknown'}</Text>
-        </View>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('UserProfile', { userId: item.author?._id })}
+          style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
+        >
+          {item.author?.profilePicture ? (
+            <Image source={{ uri: item.author.profilePicture }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {item.author?.name?.charAt(0).toUpperCase() || '?'}
+              </Text>
+            </View>
+          )}
+          <View style={styles.headerInfo}>
+            <Text style={styles.authorName}>{item.author?.name || 'Unknown'}</Text>
+            <Text style={styles.username}>@{item.author?.username || 'unknown'}</Text>
+          </View>
+        </TouchableOpacity>
         <Text style={styles.time}>{formatDate(item.createdAt)}</Text>
       </View>
 
@@ -77,7 +105,7 @@ export default function HomeScreen({ navigation }) {
           style={styles.actionButton}
           onPress={() => navigation.navigate('PostDetail', { postId: item._id })}
         >
-          <Text style={styles.commentIcon}>💬</Text>
+          <Ionicons name="chatbubble-outline" size={18} color="#9baec8" />
           <Text style={styles.actionText}>{item.comments?.length || 0}</Text>
         </TouchableOpacity>
 
@@ -85,12 +113,11 @@ export default function HomeScreen({ navigation }) {
           style={styles.actionButton}
           onPress={() => handleLike(item._id)}
         >
-          <Text style={[
-            styles.likeIcon, 
-            item.likes?.some(like => like.username) && styles.likedIcon
-          ]}>
-            {item.likes?.some(like => like.username) ? '★' : '☆'}
-          </Text>
+          <Ionicons 
+            name={item.likes?.some(like => like.username === currentUsername) ? "star" : "star-outline"}
+            size={18} 
+            color={item.likes?.some(like => like.username === currentUsername) ? "#fff" : "#9baec8"}
+          />
           <Text style={styles.actionText}>{item.likes?.length || 0}</Text>
         </TouchableOpacity>
       </View>

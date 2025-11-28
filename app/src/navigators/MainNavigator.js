@@ -1,6 +1,6 @@
 import React from 'react';
-import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import SearchScreen from '../screens/SearchScreen';
 import MyProfileScreen from '../screens/MyProfileScreen';
@@ -27,7 +27,9 @@ export default function MainNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>⌂</Text>,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
+          ),
           title: 'Home',
         }}
       />
@@ -35,7 +37,9 @@ export default function MainNavigator() {
         name="Search"
         component={SearchScreen}
         options={{
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>⚲</Text>,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="search" size={size} color={color} />
+          ),
           title: 'Search',
         }}
       />
@@ -43,7 +47,9 @@ export default function MainNavigator() {
         name="Profile"
         component={MyProfileScreen}
         options={{
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24, color }}>👤</Text>,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person" size={size} color={color} />
+          ),
           title: 'Profile',
         }}
       />

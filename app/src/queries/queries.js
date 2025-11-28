@@ -12,6 +12,7 @@ export const GET_POSTS = gql`
         _id
         username
         name
+        profilePicture
       }
       comments {
         content
@@ -39,6 +40,7 @@ export const GET_POST_BY_ID = gql`
         username
         name
         email
+        profilePicture
       }
       comments {
         content
@@ -48,6 +50,7 @@ export const GET_POST_BY_ID = gql`
           _id
           username
           name
+          profilePicture
         }
       }
       likes {
@@ -57,6 +60,7 @@ export const GET_POST_BY_ID = gql`
           _id
           username
           name
+          profilePicture
         }
       }
     }
@@ -69,6 +73,7 @@ export const SEARCH_USERS = gql`
       _id
       username
       name
+      profilePicture
     }
   }
 `;
@@ -79,15 +84,18 @@ export const GET_USER_BY_ID = gql`
       _id
       username
       name
+      profilePicture
       followers {
         _id
         username
         name
+        profilePicture
       }
       following {
         _id
         username
         name
+        profilePicture
       }
     }
   }

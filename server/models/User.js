@@ -159,4 +159,20 @@ export default class User {
     const token = signToken({ username: user.username, _id: user._id });
     return token;
   }
+
+  static async updateProfile(userId, payload) {
+    const _id = new ObjectId(userId);
+    const collection = this.getCollection();
+    
+    const updateData = {};
+    if (payload.name) updateData.name = payload.name;
+    if (payload.profilePicture !== undefined) updateData.profilePicture = payload.profilePicture;
+    
+    await collection.updateOne(
+      { _id },
+      { $set: updateData }
+    );
+    
+    return this.getUserById(userId);
+  }
 }

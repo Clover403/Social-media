@@ -22,8 +22,17 @@
       },
       "edgeToEdgeEnabled": true
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "platforms": ["android"],
+    "extra": {
+      "eas": {
+        "projectId": "7f5c7aec-fde0-444c-ac16-e7d9bd34c9ba"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7f5c7aec-fde0-444c-ac16-e7d9bd34c9ba"
     }
   }
 }
