@@ -6,6 +6,7 @@ export const userTypeDefs = `#graphql
     _id: ID
     name: String
     username: String
+    email: String
     password: String
     profilePicture: String
     followers: [User]
@@ -22,6 +23,7 @@ export const userTypeDefs = `#graphql
   input UserInput {
     name: String
     username: String
+    email: String
     password: String
   }
 
@@ -56,8 +58,8 @@ export const userResolvers = {
   },
   Mutation: {
     register: async function (_, args) {
-      const { name, username, password } = args.newUser;
-      const message = await User.createUser({ name, username, password });
+      const { name, username, email, password } = args.newUser;
+      const message = await User.createUser({ name, username, email, password });
       return message;
     },
     login: async function (_, args) {

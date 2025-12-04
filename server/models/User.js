@@ -143,14 +143,65 @@ export default class User {
 
   static async createUser(payload) {
     const collection = this.getCollection();
-    payload.password = hashPassword(payload.password);
-    await collection.insertOne(payload);
+
+    const name = payload.name?.trim();
+    const username = payload.username?.trim();
+    const email = payload.email?.trim().toLowerCase();
+    const password = payload.password;
+
+    if (!name) {
+      throw new Error("Name is required");
+    }
+
+    if (!username) {
+      throw new Error("Username is required");
+    }
+
+    if (!email) {
+      throw new Error("Email is required");
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      throw new Error("Invalid email format");
+    }
+
+    const existingEmail = await collection.findOne({ email });
+    if (existingEmail) {
+      throw new Error("Email already registered");
+    }
+
+    const existingUsername = await collection.findOne({ username });
+    if (existingUsername) {
+      throw new Error("Username already taken");
+    }
+
+    if (!password || password.length < 5) {
+      throw new Error("Password must be at least 5 characters long");
+    }
+
+    const newUser = {
+      name,
+      username,
+      email,
+      password: hashPassword(password),
+      profilePicture: payload.profilePicture,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    await collection.insertOne(newUser);
     return "create sukses";
   }
 
   static async login(username, password) {
     const collection = this.getCollection();
-    const user = await collection.findOne({ username });
+    const normalizedUsername = username?.trim();
+    if (!normalizedUsername || !password) {
+      throw new Error("Invalid username or password");
+    }
+
+    const user = await collection.findOne({ username: normalizedUsername });
     if (!user) throw new Error("Invalid username or password");
 
     const isPasswordValid = comparePassword(password, user.password);
